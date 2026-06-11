@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SPACEMAN</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; display: flex; align-items: center; justify-content: center;
+           height: 100vh; overflow: hidden; }
+    canvas { display: block; image-rendering: pixelated; }
+
+    #pause-menu {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      background: rgba(0, 5, 20, 0.92);
+      border: 1px solid #00ffff44;
+      padding: 36px 48px;
+      font-family: monospace;
+      color: #e0e0ff;
+      min-width: 260px;
+    }
+    #pause-menu .pm-title {
+      font-size: 28px; font-weight: bold;
+      color: #fff; letter-spacing: 4px;
+      text-shadow: 0 0 16px #aaccff;
+    }
+    #pause-menu .pm-row {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+    }
+    #pause-menu .pm-row span:first-child {
+      width: 56px; font-size: 11px; color: #aaaacc; letter-spacing: 1px;
+    }
+    #pause-menu .pm-row .pm-val {
+      width: 28px; text-align: right; font-size: 11px; color: #00ffcc;
+    }
+    #pause-menu input[type=range] {
+      flex: 1; accent-color: #00ffff; cursor: pointer;
+    }
+    #pause-menu .pm-hint {
+      font-size: 11px; color: #555577; letter-spacing: 1px;
+    }
+
+    #menu-controls {
+      display: none;
+      position: fixed;
+      bottom: calc(50% - 360px);
+      left: 50%; transform: translateX(-50%);
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-family: monospace;
+      color: #aaaacc;
+      min-width: 220px;
+    }
+    #menu-controls .pm-row {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+    }
+    #menu-controls .pm-row span:first-child {
+      width: 56px; font-size: 11px; color: #aaaacc; letter-spacing: 1px;
+    }
+    #menu-controls .pm-row .pm-val {
+      width: 28px; text-align: right; font-size: 11px; color: #00ffcc;
+    }
+    #menu-controls input[type=range] {
+      flex: 1; accent-color: #00ffff; cursor: pointer;
+    }
+
+    /* ── DEBUG PANEL ─────────────────────────────────────────── */
+    #debug-panel {
+      display: none;
+      position: fixed;
+      left: calc(50% + 252px);
+      top: 50%;
+      transform: translateY(-50%);
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0, 3, 12, 0.95);
+      border: 1px solid #00ffff33;
+      padding: 14px 12px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #aaaacc;
+      width: 116px;
+      user-select: none;
+    }
+    #debug-panel .dp-title {
+      color: #00ffcc; letter-spacing: 2px; font-size: 10px;
+      text-align: center; margin-bottom: 4px;
+    }
+    #debug-panel .dp-section {
+      color: #445566; letter-spacing: 1px; font-size: 9px;
+      margin-top: 4px;
+    }
+    .dp-btn {
+      width: 100%; padding: 5px 4px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid #223344;
+      color: #99aabb; font-family: monospace; font-size: 11px;
+      cursor: pointer; text-align: left;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+    .dp-btn:hover        { background: rgba(0,255,200,0.07); border-color: #00ffcc66; color: #e0e0ff; }
+    .dp-btn.active       { border-color: var(--dc, #00ffcc); color: var(--dc, #00ffcc);
+                           background: rgba(0,255,200,0.08); }
+    .dp-btn[data-type="grunt"]    { --dc: #ff5533; }
+    .dp-btn[data-type="drifter"]  { --dc: #aa44ff; }
+    .dp-btn[data-type="gunner"]   { --dc: #ff9900; }
+    .dp-btn[data-type="kamikaze"] { --dc: #ff2244; }
+    .dp-btn[data-type="tank"]     { --dc: #33aa66; }
+    .dp-btn[data-type="boss"]     { --dc: #ff3355; }
+    .dp-danger { border-color: #441111 !important; color: #aa3322 !important; }
+    .dp-danger:hover { background: rgba(255,50,20,0.1) !important; border-color: #ff3322 !important; color: #ff5544 !important; }
+    .dp-divider { border: none; border-top: 1px solid #1a2233; margin: 4px 0; }
+    #debug-panel label {
+      display: flex; align-items: center; gap: 6px; cursor: pointer; color: #6688aa;
+    }
+    #debug-panel label:hover { color: #aaccff; }
+    #debug-panel input[type=checkbox] { accent-color: #00ccff; cursor: pointer; }
+    #debug-panel .dp-hint {
+      color: #334455; font-size: 9px; line-height: 1.5; margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <div id="menu-controls">
+    <div class="pm-row">
+      <span>MUSIC</span>
+      <input type="range" id="menu-vol-music" min="0" max="100" value="100">
+      <span class="pm-val" id="menu-vol-music-val">100</span>
+    </div>
+    <div class="pm-row">
+      <span>SFX</span>
+      <input type="range" id="menu-vol-sfx" min="0" max="100" value="100">
+      <span class="pm-val" id="menu-vol-sfx-val">100</span>
+    </div>
+  </div>
+
+  <div id="pause-menu">
+    <div class="pm-title">PAUSED</div>
+    <div class="pm-row">
+      <span>MUSIC</span>
+      <input type="range" id="vol-master" min="0" max="100" value="100">
+      <span class="pm-val" id="vol-master-val">100</span>
+    </div>
+    <div class="pm-row">
+      <span>SFX</span>
+      <input type="range" id="vol-sfx" min="0" max="100" value="100">
+      <span class="pm-val" id="vol-sfx-val">100</span>
+    </div>
+    <div class="pm-hint">P — resume</div>
+  </div>
+
+  <div id="debug-panel">
+    <div class="dp-title">◆ DEBUG MODE</div>
+    <div class="dp-section">SPAWN ENEMY</div>
+    <button class="dp-btn active" data-type="grunt">Grunt</button>
+    <button class="dp-btn" data-type="drifter">Drifter</button>
+    <button class="dp-btn" data-type="gunner">Gunner</button>
+    <button class="dp-btn" data-type="kamikaze">Kamikaze</button>
+    <button class="dp-btn" data-type="tank">Tank</button>
+    <button class="dp-btn" data-type="boss">Boss #1</button>
+    <hr class="dp-divider">
+    <label><input type="checkbox" id="dp-shield"> with shield</label>
+    <hr class="dp-divider">
+    <button class="dp-btn dp-danger" id="dp-clear">Clear all</button>
+    <div class="dp-hint">F1 — toggle<br>click canvas to place</div>
+  </div>
+
+  <script src="js/canvas.js"></script>
+  <script src="js/math.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/enemies.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/debug.js"></script>
+</body>
+</html>
