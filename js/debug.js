@@ -41,9 +41,54 @@ _dpBtns.forEach(btn => {
 });
 
 // Clear button
-document.getElementById('dp-clear').addEventListener('click', () => {
+document.getElementById('dp-clear').addEventListener('click', (e) => {
+  e.stopPropagation();
   enemies = []; eBullets = []; particles = []; floaters = [];
   bossSpawned = false; bossDefeated = false;
+});
+
+// Open shop button
+document.getElementById('dp-shop').addEventListener('click', (e) => {
+  e.stopPropagation();
+  credits = 99999;
+  shopOwned = new Set();
+  initShop();
+  state = 'shop';
+});
+
+// Equip weapon buttons
+document.querySelectorAll('.dp-btn[data-weapon]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = btn.dataset.weapon;
+    if (id) {
+      shopOwned.add(id);
+      player.equipWeapon(id);
+    } else {
+      player.equipWeapon(null);
+    }
+  });
+});
+
+// Level jump buttons — built dynamically from LEVEL_DEFS
+const _dpLevels = document.getElementById('dp-levels');
+LEVEL_DEFS.forEach((_, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'dp-btn';
+  btn.textContent = i + 1;
+  btn.style.width = '28px';
+  btn.style.textAlign = 'center';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    levelIdx = i;
+    lives = player.hp;
+    startNextLevel();
+    // Highlight active level
+    _dpLevels.querySelectorAll('button').forEach((b, j) => {
+      b.classList.toggle('active', j === i);
+    });
+  });
+  _dpLevels.appendChild(btn);
 });
 
 // Canvas click → place selected type at cursor

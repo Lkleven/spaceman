@@ -6,6 +6,7 @@ function mkImg(src) {
   return i;
 }
 
+
 const shipSprites = {
   full:        mkImg('sprites/player/ship/Main Ship - Base - Full health.png'),
   slight:      mkImg('sprites/player/ship/Main Ship - Base - Slight damage.png'),
@@ -51,6 +52,33 @@ const bossWeaponSprites = {
 };
 
 const torpedoProjectileSprite = mkImg("sprites/enemies/Kla'ed/Projectiles/Kla'ed - Torpedo.png");
+
+const playerProjectileSprites = {
+  autoCannon:  mkImg('sprites/player/projectiles/Main ship weapon - Projectile - Auto cannon bullet.png'),
+  bigSpaceGun: mkImg('sprites/player/projectiles/Main ship weapon - Projectile - Big Space Gun.png'),
+  rockets:     mkImg('sprites/player/projectiles/Main ship weapon - Projectile - Rocket.png'),
+  zapper:      mkImg('sprites/player/projectiles/Main ship weapon - Projectile - Zapper.png'),
+};
+
+const shopSprites = {
+  autoCannon:   mkImg('sprites/player/weapons/Main Ship - Weapons - Auto Cannon.png'),
+  bigSpaceGun:  mkImg('sprites/player/weapons/Main Ship - Weapons - Big Space Gun.png'),
+  rockets:      mkImg('sprites/player/weapons/Main Ship - Weapons - Rockets.png'),
+  zapper:       mkImg('sprites/player/weapons/Main Ship - Weapons - Zapper.png'),
+  frontShield:  mkImg('sprites/player/shield/Main Ship - Shields - Front Shield.png'),
+  bigPulse:     mkImg('sprites/player/engine/Main Ship - Engines - Big Pulse Engine.png'),
+  burstEngine:  mkImg('sprites/player/engine/Main Ship - Engines - Burst Engine.png'),
+  supercharged: mkImg('sprites/player/engine/Main Ship - Engines - Supercharged Engine.png'),
+};
+
+const bgSprites = {
+  starfield:   mkImg('img/background/Starfield_06-1024x1024.png'),
+  starsSmall:  mkImg('img/background/transparent/Stars Small_1.png'),
+  starsBig:    mkImg('img/background/transparent/Stars-Big_1_1_PC.png'),
+  starsSmall2: mkImg('img/background/transparent/Stars Small_2.png'),
+  starsBig2:   mkImg('img/background/transparent/Stars-Big_1_2_PC.png'),
+  nebula:      mkImg('img/background/Nebula Aqua-Pink.png'),
+};
 
 const asteroidSprites = {
   base:    mkImg('sprites/world/asteroid/Asteroid 01 - Base.png'),

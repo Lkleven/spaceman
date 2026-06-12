@@ -3,10 +3,19 @@
 // ─── INIT ────────────────────────────────────────────────────────────────────
 function initGame() {
   score = 0; lives = 3; levelIdx = 0;
+  credits = 0; shopOwned = new Set();
   initLevel();
   player.weaponLevel = 0;
   player.bulletSpeed = 550;
   player.fireRate = 0.35;
+  player.equippedWeapon = null;
+  player.weaponFrame = 0;
+  player.weaponFiring = false;
+  player.beaming = false;
+  player.beamShutdown = false;
+  player.beamCharge = 0;
+  player.beamCooldown = 0;
+  player._stopBeamAudio();
 }
 
 function initLevel() {
@@ -35,6 +44,12 @@ function nextLevel() {
   levelIdx++;
   lives = player.hp;
   if (levelIdx >= LEVEL_DEFS.length) { state = 'victory'; return; }
+  credits += 500 + levelIdx * 100;
+  initShop();
+  state = 'shop';
+}
+
+function startNextLevel() {
   const lvDef = LEVEL_DEFS[levelIdx];
   bgCols = [...lvDef.bgColor];
   enemies = []; pBullets = []; eBullets = [];
@@ -45,6 +60,10 @@ function nextLevel() {
   player.x = GW / 2; player.y = GH - 80;
   player.iframes = 0; player.alive = true;
   player.hp = lives;
+  if (player.equippedWeapon) {
+    const wd = WEAPON_DEFS[player.equippedWeapon];
+    if (wd?.perPress) { player.rocketAmmo = wd.ammo; player.weaponFrame = 0; }
+  }
   waveDelay = 1.0;
   state = 'playing';
 }
@@ -55,6 +74,11 @@ function update(dt) {
   shake = Math.max(0, shake - dt * 20);
   comboTimer = Math.max(0, comboTimer - dt);
   if (comboTimer <= 0 && combo > 1) combo = 1;
+
+  bgScrollBase   = (bgScrollBase   + 10 * dt) % 720;
+  bgScrollSmall  = (bgScrollSmall  + 22 * dt) % 720;
+  bgScrollBig    = (bgScrollBig    + 40 * dt) % 720;
+  bgScrollNebula = (bgScrollNebula +  4 * dt) % 720;
 
   for (const s of stars) s.update(dt);
 
@@ -83,6 +107,11 @@ function update(dt) {
     if (jp['Space'] || jp['Enter']) { stopAllBgm(); state = 'menu'; }
     return;
   }
+  if (state === 'shop') {
+    updateShop(dt);
+    if (jp['Space'] || jp['Enter']) startNextLevel();
+    return;
+  }
   if (state === 'levelclear') {
     stateTimer -= dt;
     for (const p of particles) p.update(dt);
@@ -94,7 +123,7 @@ function update(dt) {
   // ── PLAYING ──────────────────────────────────────────────────────────────
   player.update(dt);
 
-  if (!debugMode) {
+  {
     const lvDef = LEVEL_DEFS[levelIdx];
     if (!bossSpawned) {
       if (waveDelay > 0) {
@@ -117,8 +146,16 @@ function update(dt) {
             waveDelay = lvDef.waves[waveIdx].delay || 1.5;
           } else {
             bossSpawned = true;
-            enemies.push(new Boss(levelIdx));
-            floaters.push(new Floater(GW / 2, GH / 2 - 60, '⚠ BOSS ⚠', '#ff2200'));
+            if (levelIdx === 1) {
+              const b1 = new Boss(0), b2 = new Boss(0);
+              b1.x = GW * 0.28; b1.moveTarget = { x: GW * 0.28, y: 100 };
+              b2.x = GW * 0.72; b2.moveTarget = { x: GW * 0.72, y: 100 };
+              enemies.push(b1, b2);
+              floaters.push(new Floater(GW / 2, GH / 2 - 60, '⚠ DUAL BOSS ⚠', '#ff2200'));
+            } else {
+              enemies.push(new Boss(levelIdx));
+              floaters.push(new Floater(GW / 2, GH / 2 - 60, '⚠ BOSS ⚠', '#ff2200'));
+            }
             shake = Math.max(shake, 10);
           }
         }
@@ -176,6 +213,7 @@ function render() {
   for (const s of stars) s.draw();
 
   if (state === 'menu')     { drawMenu();     ctx.restore(); return; }
+  if (state === 'shop')     { drawShop();     ctx.restore(); return; }
   if (state === 'gameover') { for (const p of particles) p.draw(); drawGameOver(); ctx.restore(); return; }
   if (state === 'victory')  { drawVictory();  ctx.restore(); return; }
 

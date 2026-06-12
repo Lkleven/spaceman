@@ -99,12 +99,49 @@ function applyPickup(pk) {
 }
 
 // ─── BACKGROUND ──────────────────────────────────────────────────────────────
+function drawScrollLayer(img, offset, alpha) {
+  // Display at 720×720 centred horizontally so it covers the 480×720 canvas
+  const d = 720, x = (GW - d) / 2;
+  ctx.globalAlpha = alpha;
+  // Two tiles cover the full canvas height seamlessly
+  const y = offset % d;
+  ctx.drawImage(img, x, y - d, d, d);
+  ctx.drawImage(img, x, y,     d, d);
+  if (y + d < GH) ctx.drawImage(img, x, y + d, d, d);
+  ctx.globalAlpha = 1;
+}
+
+function drawScrollLayerLarge(img, offset, alpha, displaySize) {
+  // For large non-tiling images: show one tile slow-scrolled, wrap when needed
+  const d = displaySize, x = (GW - d) / 2;
+  ctx.globalAlpha = alpha;
+  const y = offset % d;
+  ctx.drawImage(img, x, y - d, d, d);
+  ctx.drawImage(img, x, y,     d, d);
+  if (y + d < GH) ctx.drawImage(img, x, y + d, d, d);
+  ctx.globalAlpha = 1;
+}
+
 function drawBG() {
-  const grd = ctx.createLinearGradient(0, 0, 0, GH);
-  grd.addColorStop(0, bgCols[0]);
-  grd.addColorStop(1, bgCols[1]);
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, GW, GH);
+  if (levelIdx === 0) {
+    ctx.fillStyle = '#00010a';
+    ctx.fillRect(0, 0, GW, GH);
+    drawScrollLayer(bgSprites.starfield,  bgScrollBase,  1.0);
+    drawScrollLayer(bgSprites.starsSmall, bgScrollSmall, 0.55);
+    drawScrollLayer(bgSprites.starsBig,   bgScrollBig,   0.45);
+  } else if (levelIdx === 1) {
+    ctx.fillStyle = '#0d0010';
+    ctx.fillRect(0, 0, GW, GH);
+    drawScrollLayerLarge(bgSprites.nebula,      bgScrollNebula, 0.7,  720);
+    drawScrollLayer(bgSprites.starsSmall2, bgScrollSmall,  0.45);
+    drawScrollLayer(bgSprites.starsBig2,   bgScrollBig,    0.35);
+  } else {
+    const grd = ctx.createLinearGradient(0, 0, 0, GH);
+    grd.addColorStop(0, bgCols[0]);
+    grd.addColorStop(1, bgCols[1]);
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, GW, GH);
+  }
 }
 
 // ─── HUD ─────────────────────────────────────────────────────────────────────
@@ -153,6 +190,51 @@ function drawHUD() {
     ctx.fillText(lvDef.name, GW / 2, GH - 8);
     ctx.textAlign = 'left';
   }
+
+  drawZapperBar();
+}
+
+function drawZapperBar() {
+  if (player.equippedWeapon !== 'zapper') return;
+  const def = WEAPON_DEFS['zapper'];
+  const onCooldown = player.beamCooldown > 0;
+  const hasCharge  = player.beaming || player.beamCharge > 0;
+  if (!onCooldown && !hasCharge) return;
+
+  const bw = 120, bh = 5;
+  const bx = (GW - bw) / 2, by = GH - 44;
+
+  // Trough
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(bx, by, bw, bh);
+
+  if (onCooldown) {
+    const t = player.beamCooldown / def.cooldownTime;
+    const pulse = 0.65 + Math.sin(totalTime * 10) * 0.35;
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = '#ff2200';
+    ctx.fillRect(bx, by, bw * t, bh);
+    ctx.restore();
+    ctx.font = '8px monospace';
+    ctx.fillStyle = '#ff4422';
+    ctx.textAlign = 'center';
+    ctx.fillText('COOLDOWN', GW / 2, by - 4);
+  } else {
+    const t = Math.min(1, player.beamCharge / def.maxBeamTime);
+    // Cyan → yellow → red based on heat
+    const r = t < 0.5 ? Math.round(t * 2 * 255)       : 255;
+    const g = t < 0.5 ? 255                             : Math.round((1 - (t - 0.5) * 2) * 255);
+    const b = t < 0.5 ? Math.round((1 - t * 2) * 200)  : 0;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(bx, by, bw * t, bh);
+    ctx.font = '8px monospace';
+    ctx.fillStyle = '#6688aa';
+    ctx.textAlign = 'center';
+    ctx.fillText('ZAPPER', GW / 2, by - 4);
+  }
+
+  ctx.textAlign = 'left';
 }
 
 // ─── SCREENS ─────────────────────────────────────────────────────────────────

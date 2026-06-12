@@ -170,6 +170,17 @@
     <label><input type="checkbox" id="dp-shield"> with shield</label>
     <hr class="dp-divider">
     <button class="dp-btn dp-danger" id="dp-clear">Clear all</button>
+    <hr class="dp-divider">
+    <div class="dp-section">JUMP TO LEVEL</div>
+    <div id="dp-levels" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+    <hr class="dp-divider">
+    <div class="dp-section">EQUIP WEAPON</div>
+    <button class="dp-btn" id="dp-shop">Open shop</button>
+    <button class="dp-btn" data-weapon="auto_cannon">Auto Cannon</button>
+    <button class="dp-btn" data-weapon="big_space_gun">Big Space Gun</button>
+    <button class="dp-btn" data-weapon="rockets">Rockets</button>
+    <button class="dp-btn" data-weapon="zapper">Zapper</button>
+    <button class="dp-btn dp-danger" data-weapon="">Unequip</button>
     <div class="dp-hint">F1 — toggle<br>click canvas to place</div>
   </div>
 
@@ -183,6 +194,7 @@
   <script src="js/player.js"></script>
   <script src="js/enemies.js"></script>
   <script src="js/levels.js"></script>
+  <script src="js/shop.js"></script>
   <script src="js/hud.js"></script>
   <script src="js/main.js"></script>
   <script src="js/debug.js"></script>

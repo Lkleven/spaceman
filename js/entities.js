@@ -114,6 +114,36 @@ class Bullet {
   }
 }
 
+// ─── SPRITE BULLET (player weapon projectiles) ───────────────────────────────
+class SpriteBullet {
+  constructor(x, y, vx, vy, sheet, frameW, frameH, frameCount, fps, dmg, dispW, dispH) {
+    this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+    this.sheet = sheet;
+    this.frameW = frameW; this.frameH = frameH;
+    this.frameCount = frameCount; this.fps = fps;
+    this.dmg = dmg;
+    this.w = dispW; this.h = dispH;
+    this.owner = 'player'; this.alive = true;
+    this.frame = 0; this.timer = 0;
+  }
+  update(dt) {
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.timer += dt;
+    if (this.timer >= 1 / this.fps) { this.timer -= 1 / this.fps; this.frame = (this.frame + 1) % this.frameCount; }
+    if (this.y < -40 || this.y > GH + 40 || this.x < -40 || this.x > GW + 40) this.alive = false;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(Math.atan2(this.vx, -this.vy)); // 0 = pointing up
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.sheet, this.frame * this.frameW, 0, this.frameW, this.frameH,
+                  -this.w / 2, -this.h / 2, this.w, this.h);
+    ctx.restore();
+  }
+}
+
 // ─── TORPEDO BULLET ──────────────────────────────────────────────────────────
 class TorpedoBullet {
   constructor(x, y, vx, vy) {

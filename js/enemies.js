@@ -113,10 +113,11 @@ class Enemy {
     ctx.fillRect(bx, by, bw * Math.max(0, this.shieldHp / this.shieldMaxHp), bh);
   }
 
-  drawShieldSprite(ctx, sheet, frameW, frameH, displayW, displayH) {
+  drawShieldSprite(ctx, sheet, frameW, frameH, displayW, displayH, angle = 0) {
     if (this.shieldHp <= 0) return;
     ctx.save();
     ctx.translate(this.x, this.y);
+    if (angle) ctx.rotate(angle);
     ctx.globalAlpha = 0.85;
     if (this.shieldFlash > 0) ctx.filter = `brightness(${1 + this.shieldFlash * 3})`;
     ctx.scale(1, -1);
@@ -157,7 +158,7 @@ class Enemy {
 // ─── GRUNT ───────────────────────────────────────────────────────────────────
 class Grunt extends Enemy {
   constructor(x, y, opts) {
-    super(x, y, { w: 24, h: 22, hp: 1, score: 100, color: '#ff5533', accent: '#ffaa66',
+    super(x, y, { w: 24, h: 22, hp: 4, score: 100, color: '#ff5533', accent: '#ffaa66',
                   speed: opts?.speed || 80, shieldFrameCount: 14, engineFrameCount: 10, ...opts });
     this.vy = this.speed;
   }
@@ -181,8 +182,8 @@ class Grunt extends Enemy {
 // ─── DRIFTER ─────────────────────────────────────────────────────────────────
 class Drifter extends Enemy {
   constructor(x, y, opts) {
-    super(x, y, { w: 26, h: 24, hp: 2, score: 150, color: '#aa44ff', accent: '#cc88ff',
-                  speed: opts?.speed || 70, shieldHp: 1, shieldFrameCount: 10,
+    super(x, y, { w: 26, h: 24, hp: 8, score: 150, color: '#aa44ff', accent: '#cc88ff',
+                  speed: opts?.speed || 70, shieldHp: 4, shieldFrameCount: 10,
                   engineFrameCount: 10, ...opts });
     this.amplitude = rnd(40, 80);
     this.freq = rnd(1.2, 2.2);
@@ -210,8 +211,8 @@ class Drifter extends Enemy {
 // ─── GUNNER ──────────────────────────────────────────────────────────────────
 class Gunner extends Enemy {
   constructor(x, y, opts) {
-    super(x, y, { w: 48, h: 48, hp: 3, score: 200, color: '#ff9900', accent: '#ffcc44',
-                  speed: opts?.speed || 65, fireRate: 2.0, shieldHp: 2,
+    super(x, y, { w: 48, h: 48, hp: 12, score: 200, color: '#ff9900', accent: '#ffcc44',
+                  speed: opts?.speed || 65, fireRate: 2.0, shieldHp: 6,
                   shieldFrameCount: 40, engineFrameCount: 12, ...opts });
     this.phase = 'descend';
     this.hoverY = rnd(GH * 0.2, GH * 0.45);
@@ -271,7 +272,7 @@ class Gunner extends Enemy {
     ctx.scale(1, -1);
     ctx.drawImage(enemyEngineSprites.frigate, this.engineFrame * 64, 0, 64, 64, -sz / 2, -sz / 2, sz, sz);
     ctx.restore();
-    this.drawShieldSprite(ctx, shieldSprites.frigate, 64, 64, sz, sz);
+    this.drawShieldSprite(ctx, shieldSprites.frigate, 64, 64, sz, sz, rot);
     this.drawBody(ctx, (ctx) => {
       ctx.rotate(rot);
       ctx.scale(1, -1);
@@ -285,9 +286,9 @@ class Gunner extends Enemy {
 // ─── KAMIKAZE ────────────────────────────────────────────────────────────────
 class Kamikaze extends Enemy {
   constructor(x, y, opts) {
-    super(x, y, { w: 36, h: 36, hp: 1, score: 120, color: '#ff2244', accent: '#ff88aa',
+    super(x, y, { w: 36, h: 36, hp: 3, score: 120, color: '#ff2244', accent: '#ff88aa',
                   speed: opts?.speed || 120, drops: 0.05,
-                  shieldHp: 1, shieldFrameCount: 14, engineFrameCount: 10, ...opts });
+                  shieldHp: 2, shieldFrameCount: 14, engineFrameCount: 10, ...opts });
     this.diving = false; this.diveAngle = 0;
   }
   update(dt) {
@@ -328,7 +329,7 @@ class Kamikaze extends Enemy {
     ctx.scale(1, -1);
     ctx.drawImage(enemySprites.support, -sz / 2, -sz / 2, sz, sz);
     ctx.restore();
-    this.drawShieldSprite(ctx, shieldSprites.support, 64, 64, sz, sz);
+    this.drawShieldSprite(ctx, shieldSprites.support, 64, 64, sz, sz, angle);
     this.drawShieldBar(ctx);
   }
 }
@@ -336,9 +337,9 @@ class Kamikaze extends Enemy {
 // ─── TANK ────────────────────────────────────────────────────────────────────
 class Tank extends Enemy {
   constructor(x, y, opts) {
-    super(x, y, { w: 62, h: 62, hp: 8, score: 350, color: '#33aa66', accent: '#66ddaa',
+    super(x, y, { w: 62, h: 62, hp: 30, score: 350, color: '#33aa66', accent: '#66ddaa',
                   speed: opts?.speed || 40, drops: 0.4, fireRate: 3.0,
-                  shieldHp: 5, shieldFrameCount: 10, engineFrameCount: 10, ...opts });
+                  shieldHp: 15, shieldFrameCount: 10, engineFrameCount: 10, ...opts });
     this.holdY = rnd(60, 140);
     this.tankPhase = 'approach'; // 'approach' | 'hold' | 'rush'
     this.vy = this.speed * 2;
@@ -433,11 +434,11 @@ class Tank extends Enemy {
 class Boss extends Enemy {
   constructor(lvl, opts) {
     const bossTypes = [
-      { hp: 60,  score: 5000,  color: '#ff3355', accent: '#ff8899', w: 80,  h: 80, speed: 50, shieldHp: 30, shieldFrameCount: 10, engineFrameCount: 12 },
-      { hp: 100, score: 8000,  color: '#9922ff', accent: '#cc66ff', w: 90,  h: 70, speed: 60, shieldHp: 40 },
-      { hp: 140, score: 12000, color: '#ff8800', accent: '#ffcc00', w: 100, h: 80, speed: 70, shieldHp: 50 },
-      { hp: 180, score: 18000, color: '#00ccff', accent: '#88eeff', w: 110, h: 85, speed: 80, shieldHp: 60 },
-      { hp: 250, score: 30000, color: '#ff2200', accent: '#ff8844', w: 120, h: 90, speed: 90, shieldHp: 80 },
+      { hp: 120, score: 5000,  color: '#ff3355', accent: '#ff8899', w: 80,  h: 80, speed: 50, shieldHp: 60,  shieldFrameCount: 10, engineFrameCount: 12 },
+      { hp: 200, score: 8000,  color: '#9922ff', accent: '#cc66ff', w: 90,  h: 70, speed: 60, shieldHp: 90 },
+      { hp: 300, score: 12000, color: '#ff8800', accent: '#ffcc00', w: 100, h: 80, speed: 70, shieldHp: 120 },
+      { hp: 400, score: 18000, color: '#00ccff', accent: '#88eeff', w: 110, h: 85, speed: 80, shieldHp: 160 },
+      { hp: 550, score: 30000, color: '#ff2200', accent: '#ff8844', w: 120, h: 90, speed: 90, shieldHp: 220 },
     ];
     const bt = bossTypes[Math.min(lvl, bossTypes.length - 1)];
     super(GW / 2, -bt.h / 2, { ...bt, drops: 1.0, fireRate: 0.8, ...opts });
@@ -569,7 +570,8 @@ class Boss extends Enemy {
       this.beamDmgTimer = Math.max(0, this.beamDmgTimer - dt);
       if (player && player.alive && this.beamDmgTimer <= 0) {
         if (Math.abs(player.x - this.x) < this.w / 2 + player.w / 2) {
-          player.hit();
+          player.hp = 0;
+          player.alive = false;
           this.beamDmgTimer = 0.3;
         }
       }

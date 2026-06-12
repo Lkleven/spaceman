@@ -6,6 +6,7 @@ const sfxExplosionLarge  = new Audio('sounds/explosions/explosion_large.mp3');
 const sfxBossCharge      = new Audio('sounds/weapons/heavy_laser_charge.mp3');
 const sfxBossFire        = new Audio('sounds/weapons/heavy_laser.mp3');
 const sfxTorpedo         = new Audio('sounds/weapons/torpedo_fired.wav');
+const sfxZapper          = new Audio('sounds/weapons/zapper.mp3');
 
 const bgmMenu = new Audio("sounds/music/Miracle Warriors_ Seal of the Dark Lord (Master System PSG) - BGM 03_ World Map.mp3");
 bgmMenu.loop = true;
